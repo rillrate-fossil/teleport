@@ -1,0 +1,17 @@
+[package]
+name = "teleport"
+version = "0.1.0"
+edition = "2018"
+authors = [
+    "Denis Kolodin <deniskolodin@gmail.com>",
+    "overfloat <rillrate@gmail.com>",
+]
+repository = "https://github.com/rate-technology/teleport"
+homepage = "https://github.com/rate-technology/teleport"
+description = "rill-based live telemetry tool"
+categories = ["development-tools::debugging"]
+keywords = ["logging"]
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
