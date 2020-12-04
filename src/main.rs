@@ -3,7 +3,7 @@ mod logparser;
 use anyhow::Error;
 use futures::{select, StreamExt};
 use logparser::LogParser;
-use rill::Provider;
+use rill::{pathfinder::Pathfinder, Provider};
 use tokio::io::{self, AsyncBufReadExt, BufReader};
 
 #[tokio::main]
@@ -18,10 +18,11 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn routine() -> Result<(), Error> {
-    let log_provider = Provider::new("stderr".into());
     let log_parser = LogParser::build(PATTERN, "::")?;
     let stdin = BufReader::new(io::stdin());
     let mut lines = stdin.lines().fuse();
+    //let providers = Pathfinder::new();
+    let log_provider = Provider::new("stderr".into());
     loop {
         select! {
             line = lines.next() => {

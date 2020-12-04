@@ -24,7 +24,6 @@ pub struct LogParser {
 
 pub struct LogRecord {
     pub path: Path,
-    pub level: EntryId,
     pub data: RillData,
 }
 
@@ -46,14 +45,15 @@ impl LogParser {
         let msg = cap.name("msg").ok_or(LogParserError::NoMessage)?;
         let message = msg.as_str().to_owned();
         let data = RillData::LogRecord { timestamp, message };
-        let path: Vec<_> = path
+        let mut path: Vec<_> = path
             .as_str()
             .split(&self.separator)
             .map(EntryId::from)
             .collect();
+        let level = EntryId::from(level);
+        path.push(level);
         let record = LogRecord {
             path: Path::from(path),
-            level: EntryId::from(level),
             data,
         };
         Ok(record)
