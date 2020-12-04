@@ -1,6 +1,6 @@
 use anyhow::Error;
 use regex::Regex;
-use rill::protocol::RillData;
+use rill::protocol::{EntryId, Path, RillData};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -19,15 +19,23 @@ enum LogParserError {
 
 pub struct LogParser {
     re: Regex,
+    separator: String,
+}
+
+pub struct LogRecord {
+    pub path: Path,
+    pub level: EntryId,
+    pub data: RillData,
 }
 
 impl LogParser {
-    pub fn build(pattern: &str) -> Result<Self, Error> {
+    pub fn build(pattern: &str, separator: &str) -> Result<Self, Error> {
         let re = Regex::new(pattern)?;
-        Ok(Self { re })
+        let separator = separator.to_string();
+        Ok(Self { re, separator })
     }
 
-    pub fn parse(&self, line: &str) -> Result<RillData, Error> {
+    pub fn parse(&self, line: &str) -> Result<LogRecord, Error> {
         let cap = self.re.captures(&line).ok_or(LogParserError::NoMatches)?;
         let ts = cap.name("ts").ok_or(LogParserError::NoTimestamp)?;
         let timestamp = ts.as_str().to_owned();
@@ -37,12 +45,17 @@ impl LogParser {
         let module = path.as_str().to_owned();
         let msg = cap.name("msg").ok_or(LogParserError::NoMessage)?;
         let message = msg.as_str().to_owned();
-        let data = RillData::LogRecord {
-            timestamp,
-            level,
-            module,
-            message,
+        let data = RillData::LogRecord { timestamp, message };
+        let path: Vec<_> = path
+            .as_str()
+            .split(&self.separator)
+            .map(EntryId::from)
+            .collect();
+        let record = LogRecord {
+            path: Path::from(path),
+            level: EntryId::from(level),
+            data,
         };
-        Ok(data)
+        Ok(record)
     }
 }

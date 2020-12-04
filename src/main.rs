@@ -19,7 +19,7 @@ async fn main() -> Result<(), Error> {
 
 async fn routine() -> Result<(), Error> {
     let log_provider = Provider::new("stderr".into());
-    let log_parser = LogParser::build(PATTERN)?;
+    let log_parser = LogParser::build(PATTERN, "::")?;
     let stdin = BufReader::new(io::stdin());
     let mut lines = stdin.lines().fuse();
     loop {
@@ -28,8 +28,8 @@ async fn routine() -> Result<(), Error> {
                 if let Some(line) = line.transpose()? {
                     let res = log_parser.parse(&line);
                     match res {
-                        Ok(data) => {
-                            log_provider.send(data);
+                        Ok(record) => {
+                            log_provider.send(record.data);
                         }
                         Err(err) => {
                             log::error!("Can't parse line: {}", err);
