@@ -50,7 +50,7 @@ impl LogParser {
             .split(&self.separator)
             .map(EntryId::from)
             .collect();
-        let level = EntryId::from(lvl.as_str());
+        let level = EntryId::from(lvl.as_str().to_lowercase());
         path.push(level);
 
         let record = LogRecord {
