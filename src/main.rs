@@ -1,8 +1,11 @@
 mod logparser;
+mod opts;
 
 use anyhow::Error;
+use clap::Clap;
 use futures::{select, FutureExt, StreamExt};
 use logparser::{LogParser, LogRecord};
+use opts::Opts;
 use rill::{
     pathfinder::{Pathfinder, Record},
     Provider,
@@ -13,7 +16,9 @@ use tokio::signal;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     env_logger::try_init()?;
-    rill::install("teleport")?;
+    let opts: Opts = Opts::parse();
+    let name = opts.name.unwrap_or_else(|| "teleport".into());
+    rill::install(name)?;
     if let Err(err) = routine().await {
         log::error!("Failed: {}", err);
     }
