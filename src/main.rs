@@ -1,23 +1,48 @@
+mod logparser;
+
 use anyhow::Error;
-use futures::{select, FutureExt, StreamExt};
+use futures::{select, StreamExt};
+use logparser::LogParser;
+use rill::Provider;
 use tokio::io::{self, AsyncBufReadExt, BufReader};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    env_logger::try_init()?;
     rill::install("teleport")?;
+    if let Err(err) = routine().await {
+        log::error!("Failed: {}", err);
+    }
+    rill::terminate()?;
+    Ok(())
+}
+
+async fn routine() -> Result<(), Error> {
+    let log_provider = Provider::new("stderr".into());
+    let log_parser = LogParser::build(PATTERN)?;
     let stdin = BufReader::new(io::stdin());
     let mut lines = stdin.lines().fuse();
     loop {
         select! {
             line = lines.next() => {
-                if let Some(line) = line {
-                    // TODO: Send line by rill
+                if let Some(line) = line.transpose()? {
+                    let res = log_parser.parse(&line);
+                    match res {
+                        Ok(data) => {
+                            log_provider.send(data);
+                        }
+                        Err(err) => {
+                            log::error!("Can't parse line: {}", err);
+                        }
+                    }
                 } else {
                     break;
                 }
             }
+            // TODO: Add CtrlC
         }
     }
-    rill::terminate()?;
     Ok(())
 }
+
+static PATTERN: &str = r"^\[(?P<ts>\S+) (?P<lvl>\S+) (?P<path>\S+)\] (?P<msg>.+)$";
