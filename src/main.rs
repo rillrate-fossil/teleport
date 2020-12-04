@@ -29,8 +29,6 @@ async fn main() -> Result<(), Error> {
     //
     // Since we are here than any incoming data is useless. We can just exit the process.
     std::process::exit(0);
-
-    Ok(())
 }
 
 async fn routine() -> Result<(), Error> {
