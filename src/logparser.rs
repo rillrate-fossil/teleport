@@ -1,6 +1,6 @@
 use anyhow::Error;
 use regex::Regex;
-use rill::protocol::{EntryId, Path, RillData};
+use rill::protocol::{EntryId, Path};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -24,7 +24,8 @@ pub struct LogParser {
 
 pub struct LogRecord {
     pub path: Path,
-    pub data: RillData,
+    pub timestamp: String,
+    pub message: String,
 }
 
 impl LogParser {
@@ -41,8 +42,6 @@ impl LogParser {
         let timestamp = ts.as_str().to_owned();
         let msg = cap.name("msg").ok_or(LogParserError::NoMessage)?;
         let message = msg.as_str().to_owned();
-        let data = RillData::LogRecord { timestamp, message };
-
         let lvl = cap.name("lvl").ok_or(LogParserError::NoLevel)?;
         let path = cap.name("path").ok_or(LogParserError::NoPath)?;
         let mut path: Vec<_> = path
@@ -52,10 +51,10 @@ impl LogParser {
             .collect();
         let level = EntryId::from(lvl.as_str().to_lowercase());
         path.push(level);
-
         let record = LogRecord {
             path: Path::from(path),
-            data,
+            timestamp,
+            message,
         };
 
         Ok(record)

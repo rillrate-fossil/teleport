@@ -8,7 +8,7 @@ use logparser::{LogParser, LogRecord};
 use opts::Opts;
 use rill::{
     pathfinder::{Pathfinder, Record},
-    Provider,
+    provider::LogProvider,
 };
 use tokio::io::{self, AsyncBufReadExt, BufReader};
 use tokio::signal;
@@ -40,7 +40,7 @@ async fn routine() -> Result<(), Error> {
     let log_parser = LogParser::build(PATTERN, "::")?;
     let stdin = BufReader::new(io::stdin());
     let mut lines = stdin.lines().fuse();
-    let mut providers: Pathfinder<Provider> = Pathfinder::new();
+    let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
     let ctrl_c = signal::ctrl_c().fuse();
     tokio::pin!(ctrl_c);
     loop {
@@ -49,14 +49,14 @@ async fn routine() -> Result<(), Error> {
                 if let Some(line) = line.transpose()? {
                     let res = log_parser.parse(&line);
                     match res {
-                        Ok(LogRecord { path, data }) => {
+                        Ok(LogRecord { path, timestamp, message }) => {
                             let provider = providers.find(&path).and_then(Record::get_link);
                             if let Some(provider) = provider {
                                 if provider.is_active() {
-                                    provider.send(data);
+                                    provider.log(timestamp, message);
                                 }
                             } else {
-                                let provider = Provider::new(path.clone());
+                                let provider = LogProvider::new(path.clone());
                                 providers.dig(path).set_link(provider);
                             }
                         }
