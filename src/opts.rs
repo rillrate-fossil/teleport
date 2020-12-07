@@ -11,6 +11,7 @@ pub struct Opts {
 }
 
 #[derive(Clap, EnumString)]
+#[strum(serialize_all = "snake_case")]
 pub enum Format {
     EnvLogger,
     PrettyEnvLogger,
