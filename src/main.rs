@@ -77,4 +77,4 @@ async fn routine() -> Result<(), Error> {
 }
 
 static PATTERN_ENV_LOGGER: &str = r"^\[(?P<ts>\S+) (?P<lvl>\S+) (?P<path>\S+)\] (?P<msg>.+)$";
-static PATTERN_PRETTY_ENV_LOGGER: &str = r"^(?P<ts>) (?P<lvl>\S+) (?P<path>\S+) > (?P<msg>.+)$";
+static PATTERN_PRETTY_ENV_LOGGER: &str = r"^(?P<ts>) (?P<lvl>\S+) (?P<path>\S+)\s+> (?P<msg>.+)$";
