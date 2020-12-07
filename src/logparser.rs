@@ -17,6 +17,11 @@ enum LogParserError {
     NoMessage,
 }
 
+pub struct LogFormat {
+    pub pattern: &'static str,
+    pub separator: &'static str,
+}
+
 pub struct LogParser {
     re: Regex,
     separator: String,
@@ -29,9 +34,9 @@ pub struct LogRecord {
 }
 
 impl LogParser {
-    pub fn build(pattern: &str, separator: &str) -> Result<Self, Error> {
-        let re = Regex::new(pattern)?;
-        let separator = separator.to_string();
+    pub fn build(format: LogFormat) -> Result<Self, Error> {
+        let re = Regex::new(format.pattern)?;
+        let separator = format.separator.to_string();
         Ok(Self { re, separator })
     }
 

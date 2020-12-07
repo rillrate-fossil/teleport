@@ -4,7 +4,7 @@ mod opts;
 use anyhow::Error;
 use clap::Clap;
 use futures::{select, FutureExt, StreamExt};
-use logparser::{LogParser, LogRecord};
+use logparser::{LogFormat, LogParser, LogRecord};
 use opts::Opts;
 use rill::{
     pathfinder::{Pathfinder, Record},
@@ -19,7 +19,7 @@ async fn main() -> Result<(), Error> {
     let opts: Opts = Opts::parse();
     let name = opts.name.unwrap_or_else(|| "teleport".into());
     rill::install(name)?;
-    if let Err(err) = routine().await {
+    if let Err(err) = routine(opts.format.into()).await {
         log::error!("Failed: {}", err);
     }
     rill::terminate()?;
@@ -36,8 +36,8 @@ async fn main() -> Result<(), Error> {
     std::process::exit(0);
 }
 
-async fn routine() -> Result<(), Error> {
-    let log_parser = LogParser::build(PATTERN_PRETTY_ENV_LOGGER, "::")?;
+async fn routine(format: LogFormat) -> Result<(), Error> {
+    let log_parser = LogParser::build(format)?;
     let stdin = BufReader::new(io::stdin());
     let mut lines = stdin.lines().fuse();
     let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
@@ -75,6 +75,3 @@ async fn routine() -> Result<(), Error> {
     }
     Ok(())
 }
-
-static PATTERN_ENV_LOGGER: &str = r"^\[(?P<ts>\S+) (?P<lvl>\S+) (?P<path>\S+)\] (?P<msg>.+)$";
-static PATTERN_PRETTY_ENV_LOGGER: &str = r"^(?P<ts>) (?P<lvl>\S+) (?P<path>\S+)\s+> (?P<msg>.+)$";

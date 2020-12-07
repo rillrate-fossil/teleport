@@ -22,5 +22,7 @@ futures = "0.3.8"
 log = "0.4.11"
 regex = "1.4.2"
 rill = "0.5.0"
+strum = "0.20.0"
+strum_macros = "0.20.1"
 thiserror = "1.0.22"
 tokio = { versio = "0.3.5", features = ["full"] }
