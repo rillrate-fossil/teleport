@@ -37,7 +37,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn routine() -> Result<(), Error> {
-    let log_parser = LogParser::build(PATTERN, "::")?;
+    let log_parser = LogParser::build(PATTERN_PRETTY_ENV_LOGGER, "::")?;
     let stdin = BufReader::new(io::stdin());
     let mut lines = stdin.lines().fuse();
     let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
@@ -61,7 +61,7 @@ async fn routine() -> Result<(), Error> {
                             }
                         }
                         Err(err) => {
-                            log::error!("Can't parse line: {}", err);
+                            log::error!("Can't parse line \"{}\": {}", line, err);
                         }
                     }
                 } else {
@@ -76,4 +76,5 @@ async fn routine() -> Result<(), Error> {
     Ok(())
 }
 
-static PATTERN: &str = r"^\[(?P<ts>\S+) (?P<lvl>\S+) (?P<path>\S+)\] (?P<msg>.+)$";
+static PATTERN_ENV_LOGGER: &str = r"^\[(?P<ts>\S+) (?P<lvl>\S+) (?P<path>\S+)\] (?P<msg>.+)$";
+static PATTERN_PRETTY_ENV_LOGGER: &str = r"^(?P<ts>) (?P<lvl>\S+) (?P<path>\S+) > (?P<msg>.+)$";
