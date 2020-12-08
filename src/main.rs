@@ -11,7 +11,7 @@ use rill::{
     pathfinder::{Pathfinder, Record},
     provider::LogProvider,
 };
-use tokio::io::{self, AsyncBufReadExt, BufReader};
+use supplier::StdinSupplier;
 use tokio::signal;
 
 #[tokio::main]
@@ -39,14 +39,13 @@ async fn main() -> Result<(), Error> {
 
 async fn routine(format: LogFormat) -> Result<(), Error> {
     let log_parser = LogParser::build(format)?;
-    let stdin = BufReader::new(io::stdin());
-    let mut lines = stdin.lines().fuse();
+    let mut supplier = StdinSupplier::new();
     let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
     let ctrl_c = signal::ctrl_c().fuse();
     tokio::pin!(ctrl_c);
     loop {
         select! {
-            line = lines.next() => {
+            line = supplier.next() => {
                 if let Some(line) = line.transpose()? {
                     let res = log_parser.parse(&line);
                     match res {
