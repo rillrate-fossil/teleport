@@ -2,14 +2,6 @@ use crate::logparser::LogFormat;
 use clap::Clap;
 use strum_macros::EnumString;
 
-#[derive(Clap)]
-pub struct Opts {
-    #[clap(long)]
-    pub name: Option<String>,
-    #[clap(long)]
-    pub format: Format,
-}
-
 #[derive(Clap, EnumString)]
 #[strum(serialize_all = "snake_case")]
 pub enum Format {
@@ -30,4 +22,19 @@ impl Into<LogFormat> for Format {
             },
         }
     }
+}
+
+#[derive(Clap)]
+pub struct Opts {
+    #[clap(long)]
+    pub name: Option<String>,
+    #[clap(long)]
+    pub format: Format,
+    #[clap(subcommand)]
+    pub subcmd: SubCommand,
+}
+
+#[derive(Clap)]
+pub enum SubCommand {
+    Stdin,
 }

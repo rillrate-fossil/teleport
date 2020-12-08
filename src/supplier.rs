@@ -7,7 +7,7 @@ use pin_project::pin_project;
 use std::pin::Pin;
 use tokio::io::{self, AsyncBufReadExt, BufReader, Error, Lines, Stdin};
 
-pub trait Supplier: Stream<Item = Result<String, Error>> {}
+pub trait Supplier: Stream<Item = Result<String, Error>> + FusedStream + Unpin {}
 
 #[pin_project]
 pub struct StdinSupplier {
@@ -21,6 +21,8 @@ impl StdinSupplier {
         Self { stdin }
     }
 }
+
+impl Supplier for StdinSupplier {}
 
 impl Stream for StdinSupplier {
     type Item = Result<String, Error>;

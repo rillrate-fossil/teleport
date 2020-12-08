@@ -6,12 +6,12 @@ use anyhow::Error;
 use clap::Clap;
 use futures::{select, FutureExt, StreamExt};
 use logparser::{LogFormat, LogParser, LogRecord};
-use opts::Opts;
+use opts::{Opts, SubCommand};
 use rill::{
     pathfinder::{Pathfinder, Record},
     provider::LogProvider,
 };
-use supplier::StdinSupplier;
+use supplier::{StdinSupplier, Supplier};
 use tokio::signal;
 
 #[tokio::main]
@@ -20,8 +20,13 @@ async fn main() -> Result<(), Error> {
     let opts: Opts = Opts::parse();
     let name = opts.name.unwrap_or_else(|| "teleport".into());
     rill::install(name)?;
-    if let Err(err) = routine(opts.format.into()).await {
-        log::error!("Failed: {}", err);
+    match opts.subcmd {
+        SubCommand::Stdin => {
+            let supplier = StdinSupplier::new();
+            if let Err(err) = routine(supplier, opts.format.into()).await {
+                log::error!("Failed: {}", err);
+            }
+        }
     }
     rill::terminate()?;
 
@@ -37,9 +42,8 @@ async fn main() -> Result<(), Error> {
     std::process::exit(0);
 }
 
-async fn routine(format: LogFormat) -> Result<(), Error> {
+async fn routine(mut supplier: impl Supplier, format: LogFormat) -> Result<(), Error> {
     let log_parser = LogParser::build(format)?;
-    let mut supplier = StdinSupplier::new();
     let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
     let ctrl_c = signal::ctrl_c().fuse();
     tokio::pin!(ctrl_c);
