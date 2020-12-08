@@ -21,9 +21,9 @@ async fn main() -> Result<(), Error> {
     let name = opts.name.unwrap_or_else(|| "teleport".into());
     rill::install(name)?;
     match opts.subcmd {
-        SubCommand::Stdin => {
+        SubCommand::Stdin(stdin) => {
             let supplier = StdinSupplier::new();
-            if let Err(err) = routine(supplier, opts.format.into()).await {
+            if let Err(err) = routine(supplier, stdin.format.into()).await {
                 log::error!("Failed: {}", err);
             }
         }

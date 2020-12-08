@@ -28,13 +28,17 @@ impl Into<LogFormat> for Format {
 pub struct Opts {
     #[clap(long)]
     pub name: Option<String>,
-    #[clap(long)]
-    pub format: Format,
     #[clap(subcommand)]
     pub subcmd: SubCommand,
 }
 
 #[derive(Clap)]
 pub enum SubCommand {
-    Stdin,
+    Stdin(Stdin),
+}
+
+#[derive(Clap)]
+pub struct Stdin {
+    #[clap(long)]
+    pub format: Format,
 }
