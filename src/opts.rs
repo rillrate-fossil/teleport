@@ -1,25 +1,28 @@
 use crate::logparser::LogFormat;
 use clap::Clap;
-use strum_macros::EnumString;
+use std::str::FromStr;
+use thiserror::Error;
 
-#[derive(Clap, EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum Format {
-    EnvLogger,
-    PrettyEnvLogger,
+#[derive(Error, Debug)]
+pub enum LogFormatError {
+    #[error("unknown format {0}")]
+    UnknownFormat(String),
 }
 
-impl Into<LogFormat> for Format {
-    fn into(self) -> LogFormat {
-        match self {
-            Self::EnvLogger => LogFormat {
+impl FromStr for LogFormat {
+    type Err = LogFormatError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "env_logger" => Ok(LogFormat {
                 pattern: r"^\[(?P<ts>\S+) (?P<lvl>\S+) (?P<path>\S+)\] (?P<msg>.+)$",
                 separator: "::",
-            },
-            Self::PrettyEnvLogger => LogFormat {
+            }),
+            "pretty_env_logger" => Ok(LogFormat {
                 pattern: r"^(?P<ts>) (?P<lvl>\S+) (?P<path>\S+)\s+> (?P<msg>.+)$",
                 separator: "::",
-            },
+            }),
+            unknown => Err(LogFormatError::UnknownFormat(unknown.to_string())),
         }
     }
 }
@@ -40,5 +43,5 @@ pub enum SubCommand {
 #[derive(Clap)]
 pub struct Stdin {
     #[clap(long)]
-    pub format: Format,
+    pub format: LogFormat,
 }
