@@ -1,5 +1,6 @@
 mod logparser;
 mod opts;
+mod supplier;
 
 use anyhow::Error;
 use clap::Clap;
