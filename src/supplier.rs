@@ -4,6 +4,7 @@ use futures::{
     Stream, StreamExt,
 };
 use pin_project::pin_project;
+use std::path::Path;
 use std::pin::Pin;
 use tokio::io::{self, AsyncBufReadExt, BufReader, Error, Lines, Stdin};
 
@@ -36,5 +37,13 @@ impl Stream for StdinSupplier {
 impl FusedStream for StdinSupplier {
     fn is_terminated(&self) -> bool {
         self.stdin.is_terminated()
+    }
+}
+
+pub struct FileSupplier {}
+
+impl FileSupplier {
+    pub fn new(path: impl AsRef<Path>) -> Self {
+        Self {}
     }
 }
