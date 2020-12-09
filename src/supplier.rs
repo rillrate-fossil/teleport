@@ -8,7 +8,7 @@ use pin_project::pin_project;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use tokio::fs::File;
-use tokio::io::{self, AsyncBufReadExt, BufReader, Error, Lines, Stdin};
+use tokio::io::{self, AsyncBufReadExt, AsyncSeekExt, BufReader, Error, Lines, SeekFrom, Stdin};
 
 pub trait Supplier: Stream<Item = Result<String, Error>> + FusedStream + Unpin {}
 
@@ -52,10 +52,22 @@ impl FileSupplier {
 
 fn read_file_to_end(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
     try_stream! {
-        let file = File::open(&path).await?;
-        let mut lines = BufReader::new(file).lines();
-        while let Some(line) = lines.next().await.transpose()? {
-            yield line;
+        let mut position = 0;
+        let mut file = File::open(&path).await?;
+        let total = file.seek(SeekFrom::End(0)).await?;
+        if position < total {
+            file.seek(SeekFrom::Start(position)).await?;
+        } else {
+            log::warn!("Log file completely changes (size reset). Reading from the start.");
+            file.seek(SeekFrom::Start(0)).await?;
         }
+        {
+            let mut lines = BufReader::new(&mut file).lines();
+            while let Some(line) = lines.next().await.transpose()? {
+                yield line;
+            }
+        }
+        position = total;
+        // TODO: Await for the inotify
     }
 }
