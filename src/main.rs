@@ -23,7 +23,15 @@ async fn main() -> Result<(), Error> {
     match opts.subcmd {
         SubCommand::Stdin(stdin) => {
             let supplier = supplier::stdin();
+            // TODO: DRY
             if let Err(err) = routine(supplier, stdin.format.into()).await {
+                log::error!("Failed: {}", err);
+            }
+        }
+        SubCommand::File(file) => {
+            let supplier = supplier::file(file.path);
+            // TODO: DRY
+            if let Err(err) = routine(supplier, file.format.into()).await {
                 log::error!("Failed: {}", err);
             }
         }

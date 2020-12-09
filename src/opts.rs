@@ -37,12 +37,21 @@ pub struct Opts {
 
 #[derive(Clap)]
 pub enum SubCommand {
-    #[clap(about = "Reads logs from stdin")]
+    #[clap(about = "Reads logs from the stdin")]
     Stdin(Stdin),
+    #[clap(about = "Reads logs from a file")]
+    File(File),
 }
 
 #[derive(Clap)]
 pub struct Stdin {
     #[clap(long, default_value = "env_logger")]
     pub format: LogFormat,
+}
+
+#[derive(Clap)]
+pub struct File {
+    #[clap(long, default_value = "env_logger")]
+    pub format: LogFormat,
+    pub path: String,
 }
