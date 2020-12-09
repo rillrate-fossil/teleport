@@ -1,11 +1,13 @@
+use async_stream::try_stream;
 use futures::{
     stream::{Fuse, FusedStream},
     task::{Context, Poll},
     Stream, StreamExt,
 };
 use pin_project::pin_project;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
+use tokio::fs::File;
 use tokio::io::{self, AsyncBufReadExt, BufReader, Error, Lines, Stdin};
 
 pub trait Supplier: Stream<Item = Result<String, Error>> + FusedStream + Unpin {}
@@ -45,5 +47,15 @@ pub struct FileSupplier {}
 impl FileSupplier {
     pub fn new(path: impl AsRef<Path>) -> Self {
         Self {}
+    }
+}
+
+fn read_file_to_end(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
+    try_stream! {
+        let file = File::open(&path).await?;
+        let mut lines = BufReader::new(file).lines();
+        while let Some(line) = lines.next().await.transpose()? {
+            yield line;
+        }
     }
 }
