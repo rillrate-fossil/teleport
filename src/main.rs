@@ -11,7 +11,7 @@ use rill::{
     pathfinder::{Pathfinder, Record},
     provider::LogProvider,
 };
-use supplier::{StdinSupplier, Supplier};
+use supplier::Supplier;
 use tokio::signal;
 
 #[tokio::main]
@@ -22,7 +22,7 @@ async fn main() -> Result<(), Error> {
     rill::install(name)?;
     match opts.subcmd {
         SubCommand::Stdin(stdin) => {
-            let supplier = StdinSupplier::new();
+            let supplier = supplier::stdin();
             if let Err(err) = routine(supplier, stdin.format.into()).await {
                 log::error!("Failed: {}", err);
             }
