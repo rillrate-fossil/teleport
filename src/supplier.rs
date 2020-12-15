@@ -39,7 +39,8 @@ fn watch_file(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
     try_stream! {
         let (tx, mut rx) = watch::channel(None);
         let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| {
-            if let Err(err) = tx.send(Some(res)) {
+            // tokio 0.3: if let Err(err) = tx.send(Some(res)) {
+            if let Err(err) = tx.broadcast(Some(std::sync::Arc::new(res))) {
                 log::error!("Can't send inotify signal: {}", err);
             }
         })?;
@@ -63,7 +64,8 @@ fn watch_file(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
                 }
                 position = total;
             }
-            rx.changed().await?;
+            // tokio 0.3: rx.changed().await?;
+            rx.recv().await;
         }
     }
 }
