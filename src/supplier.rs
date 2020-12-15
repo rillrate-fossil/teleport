@@ -7,9 +7,15 @@ use tokio::fs::File;
 use tokio::io::{self, AsyncBufReadExt, AsyncSeekExt, BufReader, SeekFrom};
 use tokio::sync::watch;
 
-pub trait Supplier: Stream<Item = Result<String, Error>> + FusedStream + Unpin {}
+pub trait Supplier:
+    Stream<Item = Result<String, Error>> + FusedStream + Unpin + Send + 'static
+{
+}
 
-impl<T> Supplier for T where T: Stream<Item = Result<String, Error>> + FusedStream + Unpin {}
+impl<T> Supplier for T where
+    T: Stream<Item = Result<String, Error>> + FusedStream + Unpin + Send + 'static
+{
+}
 
 pub fn stdin() -> impl Supplier {
     watch_stdin().boxed().fuse()

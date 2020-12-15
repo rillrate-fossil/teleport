@@ -3,9 +3,11 @@ mod opts;
 mod supplier;
 
 use anyhow::Error;
+use async_trait::async_trait;
 use clap::Clap;
 use futures::{select, FutureExt, StreamExt};
 use logparser::{LogFormat, LogParser, LogRecord};
+use meio::prelude::{LiteTask, ShutdownReceiver};
 use opts::{Opts, SubCommand};
 use rill::{
     pathfinder::{Pathfinder, Record},
@@ -51,6 +53,18 @@ async fn main() -> Result<(), Error> {
     //
     // Since we are here than any incoming data is useless. We can just exit the process.
     std::process::exit(0);
+}
+
+struct LogRoutine<T: Supplier> {
+    supplier: T,
+    format: LogFormat,
+}
+
+#[async_trait]
+impl<T: Supplier> LiteTask for LogRoutine<T> {
+    async fn routine(self, signal: ShutdownReceiver) -> Result<(), Error> {
+        todo!()
+    }
 }
 
 async fn routine(mut supplier: impl Supplier, format: LogFormat) -> Result<(), Error> {

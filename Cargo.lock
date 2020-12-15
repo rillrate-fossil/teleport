@@ -1659,6 +1659,7 @@ dependencies = [
  "env_logger",
  "futures",
  "log",
+ "meio",
  "notify",
  "regex",
  "rill",
