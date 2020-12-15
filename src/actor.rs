@@ -3,9 +3,10 @@ use crate::{link, supplier};
 use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::{
-    ActionHandler, Actor, Context, Eliminated, IdOf, InterruptedBy, LiteTask, StartedBy, System,
-    Task,
+    ActionHandler, Actor, Consumer, Context, Eliminated, IdOf, InterruptedBy, LiteTask, StartedBy,
+    System, Task,
 };
+use meio::signal::CtrlC;
 
 pub struct Teleport {}
 
@@ -21,7 +22,8 @@ impl Actor for Teleport {
 
 #[async_trait]
 impl StartedBy<System> for Teleport {
-    async fn handle(&mut self, _ctx: &mut Context<Self>) -> Result<(), Error> {
+    async fn handle(&mut self, ctx: &mut Context<Self>) -> Result<(), Error> {
+        ctx.address().attach(CtrlC::stream());
         Ok(())
     }
 }
@@ -29,6 +31,15 @@ impl StartedBy<System> for Teleport {
 #[async_trait]
 impl InterruptedBy<System> for Teleport {
     async fn handle(&mut self, _ctx: &mut Context<Self>) -> Result<(), Error> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl Consumer<CtrlC> for Teleport {
+    async fn handle(&mut self, _: CtrlC, ctx: &mut Context<Self>) -> Result<(), Error> {
+        log::info!("Ctrl-C signal. Terminating...");
+        ctx.shutdown();
         Ok(())
     }
 }

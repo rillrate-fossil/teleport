@@ -4,7 +4,7 @@ use futures::{stream::FusedStream, Stream, StreamExt};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
 use tokio::fs::File;
-use tokio::io::{self, AsyncBufReadExt, AsyncSeekExt, BufReader, SeekFrom};
+use tokio::io::{self, AsyncBufReadExt, /* tokio 0.3: AsyncSeekExt,*/ BufReader, SeekFrom};
 use tokio::sync::watch;
 
 pub trait Supplier:
