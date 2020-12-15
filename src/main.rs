@@ -1,19 +1,16 @@
+mod actor;
+mod link;
+mod log_task;
 mod logparser;
 mod opts;
 mod supplier;
 
+use actor::Teleport;
 use anyhow::Error;
-use async_trait::async_trait;
 use clap::Clap;
-use futures::{select, FutureExt, StreamExt};
-use logparser::{LogFormat, LogParser, LogRecord};
-use meio::prelude::{LiteTask, ShutdownReceiver};
+use link::TeleportLink;
+use meio::prelude::Link;
 use opts::{Opts, SubCommand};
-use rill::{
-    pathfinder::{Pathfinder, Record},
-    provider::LogProvider,
-};
-use supplier::Supplier;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -21,19 +18,21 @@ async fn main() -> Result<(), Error> {
     let opts: Opts = Opts::parse();
     let name = opts.name.unwrap_or_else(|| "teleport".into());
     rill::install(name)?;
+    let teleport = Teleport::new();
+    let mut link: TeleportLink = meio::spawn(teleport).link();
     match opts.subcmd {
         SubCommand::Stdin(stdin) => {
-            let supplier = supplier::stdin();
-            let task = LogTask::new(supplier, stdin.format.into());
+            link.bind_stdin(stdin.format.into()).await?;
         }
         SubCommand::File(file) => {
-            let supplier = supplier::file(file.path);
-            let task = LogTask::new(supplier, file.format.into());
+            link.bind_file(file.path, file.format.into()).await?;
         }
         SubCommand::Prometheus(prometheus) => {
             todo!();
         }
     }
+    link.interrupt()?;
+    link.join().await;
     rill::terminate()?;
 
     // I have to use `exit` call here, because:
@@ -46,57 +45,4 @@ async fn main() -> Result<(), Error> {
     //
     // Since we are here than any incoming data is useless. We can just exit the process.
     std::process::exit(0);
-}
-
-struct LogTask<T: Supplier> {
-    supplier: T,
-    format: LogFormat,
-}
-
-impl<T: Supplier> LogTask<T> {
-    fn new(supplier: T, format: LogFormat) -> Self {
-        Self { supplier, format }
-    }
-}
-
-#[async_trait]
-impl<T: Supplier> LiteTask for LogTask<T> {
-    async fn routine(mut self, signal: ShutdownReceiver) -> Result<(), Error> {
-        let log_parser = LogParser::build(self.format)?;
-        let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
-        let done = signal.just_done().fuse();
-        tokio::pin!(done);
-        let supplier = &mut self.supplier;
-        loop {
-            select! {
-                line = supplier.next() => {
-                    if let Some(line) = line.transpose()? {
-                        let res = log_parser.parse(&line);
-                        match res {
-                            Ok(LogRecord { path, timestamp, message }) => {
-                                let provider = providers.find(&path).and_then(Record::get_link);
-                                if let Some(provider) = provider {
-                                    if provider.is_active() {
-                                        provider.log(timestamp, message);
-                                    }
-                                } else {
-                                    let provider = LogProvider::new(path.clone());
-                                    providers.dig(path).set_link(provider);
-                                }
-                            }
-                            Err(err) => {
-                                log::error!("Can't parse line \"{}\": {}", line, err);
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                _ = done => {
-                    break;
-                }
-            }
-        }
-        Ok(())
-    }
 }

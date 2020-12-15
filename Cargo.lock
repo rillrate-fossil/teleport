@@ -1656,6 +1656,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "clap",
+ "derive_more",
  "env_logger",
  "futures",
  "log",
