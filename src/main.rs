@@ -35,6 +35,9 @@ async fn main() -> Result<(), Error> {
                 log::error!("Failed: {}", err);
             }
         }
+        SubCommand::Prometheus(prometheus) => {
+            todo!();
+        }
     }
     rill::terminate()?;
 

@@ -41,6 +41,8 @@ pub enum SubCommand {
     Stdin(Stdin),
     #[clap(about = "Reads logs from a file")]
     File(File),
+    #[clap(about = "Polls Prometheus metrics endpoint")]
+    Prometheus(Prometheus),
 }
 
 #[derive(Clap)]
@@ -55,3 +57,6 @@ pub struct File {
     pub format: LogFormat,
     pub path: String,
 }
+
+#[derive(Clap)]
+pub struct Prometheus {}
