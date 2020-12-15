@@ -14,7 +14,6 @@ use rill::{
     provider::LogProvider,
 };
 use supplier::Supplier;
-use tokio::signal;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -25,17 +24,11 @@ async fn main() -> Result<(), Error> {
     match opts.subcmd {
         SubCommand::Stdin(stdin) => {
             let supplier = supplier::stdin();
-            // TODO: DRY
-            if let Err(err) = routine(supplier, stdin.format.into()).await {
-                log::error!("Failed: {}", err);
-            }
+            let task = LogTask::new(supplier, stdin.format.into());
         }
         SubCommand::File(file) => {
             let supplier = supplier::file(file.path);
-            // TODO: DRY
-            if let Err(err) = routine(supplier, file.format.into()).await {
-                log::error!("Failed: {}", err);
-            }
+            let task = LogTask::new(supplier, file.format.into());
         }
         SubCommand::Prometheus(prometheus) => {
             todo!();
@@ -55,52 +48,55 @@ async fn main() -> Result<(), Error> {
     std::process::exit(0);
 }
 
-struct LogRoutine<T: Supplier> {
+struct LogTask<T: Supplier> {
     supplier: T,
     format: LogFormat,
 }
 
-#[async_trait]
-impl<T: Supplier> LiteTask for LogRoutine<T> {
-    async fn routine(self, signal: ShutdownReceiver) -> Result<(), Error> {
-        todo!()
+impl<T: Supplier> LogTask<T> {
+    fn new(supplier: T, format: LogFormat) -> Self {
+        Self { supplier, format }
     }
 }
 
-async fn routine(mut supplier: impl Supplier, format: LogFormat) -> Result<(), Error> {
-    let log_parser = LogParser::build(format)?;
-    let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
-    let ctrl_c = signal::ctrl_c().fuse();
-    tokio::pin!(ctrl_c);
-    loop {
-        select! {
-            line = supplier.next() => {
-                if let Some(line) = line.transpose()? {
-                    let res = log_parser.parse(&line);
-                    match res {
-                        Ok(LogRecord { path, timestamp, message }) => {
-                            let provider = providers.find(&path).and_then(Record::get_link);
-                            if let Some(provider) = provider {
-                                if provider.is_active() {
-                                    provider.log(timestamp, message);
+#[async_trait]
+impl<T: Supplier> LiteTask for LogTask<T> {
+    async fn routine(mut self, signal: ShutdownReceiver) -> Result<(), Error> {
+        let log_parser = LogParser::build(self.format)?;
+        let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
+        let done = signal.just_done().fuse();
+        tokio::pin!(done);
+        let supplier = &mut self.supplier;
+        loop {
+            select! {
+                line = supplier.next() => {
+                    if let Some(line) = line.transpose()? {
+                        let res = log_parser.parse(&line);
+                        match res {
+                            Ok(LogRecord { path, timestamp, message }) => {
+                                let provider = providers.find(&path).and_then(Record::get_link);
+                                if let Some(provider) = provider {
+                                    if provider.is_active() {
+                                        provider.log(timestamp, message);
+                                    }
+                                } else {
+                                    let provider = LogProvider::new(path.clone());
+                                    providers.dig(path).set_link(provider);
                                 }
-                            } else {
-                                let provider = LogProvider::new(path.clone());
-                                providers.dig(path).set_link(provider);
+                            }
+                            Err(err) => {
+                                log::error!("Can't parse line \"{}\": {}", line, err);
                             }
                         }
-                        Err(err) => {
-                            log::error!("Can't parse line \"{}\": {}", line, err);
-                        }
+                    } else {
+                        break;
                     }
-                } else {
+                }
+                _ = done => {
                     break;
                 }
             }
-            _ = ctrl_c => {
-                break;
-            }
         }
+        Ok(())
     }
-    Ok(())
 }
