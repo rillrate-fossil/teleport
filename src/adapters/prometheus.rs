@@ -26,10 +26,7 @@ impl PrometheusTask {
 #[async_trait]
 impl LiteTask for PrometheusTask {
     async fn routine(mut self, signal: ShutdownReceiver) -> Result<(), Error> {
-        // TODO: DRY that below
-        let done = signal.just_done().fuse();
-        tokio::pin!(done);
-
+        let mut done = signal.just_done();
         let duration = self.interval;
         loop {
             select! {

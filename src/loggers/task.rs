@@ -2,7 +2,7 @@ use super::parser::{LogFormat, LogParser, LogRecord};
 use super::supplier::Supplier;
 use anyhow::Error;
 use async_trait::async_trait;
-use futures::{select, FutureExt, StreamExt};
+use futures::{select, StreamExt};
 use meio::prelude::{LiteTask, ShutdownReceiver};
 use rill::{
     pathfinder::{Pathfinder, Record},
@@ -25,10 +25,7 @@ impl<T: Supplier> LiteTask for LogTask<T> {
     async fn routine(mut self, signal: ShutdownReceiver) -> Result<(), Error> {
         let log_parser = LogParser::build(self.format)?;
         let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
-        // TODO: Improve that below
-        let done = signal.just_done().fuse();
-        tokio::pin!(done);
-        // TODO: DRY that above ^
+        let mut done = signal.just_done();
         let supplier = &mut self.supplier;
         loop {
             select! {
