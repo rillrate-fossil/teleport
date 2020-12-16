@@ -25,8 +25,10 @@ impl<T: Supplier> LiteTask for LogTask<T> {
     async fn routine(mut self, signal: ShutdownReceiver) -> Result<(), Error> {
         let log_parser = LogParser::build(self.format)?;
         let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
+        // TODO: Improve that below
         let done = signal.just_done().fuse();
         tokio::pin!(done);
+        // TODO: DRY that above ^
         let supplier = &mut self.supplier;
         loop {
             select! {

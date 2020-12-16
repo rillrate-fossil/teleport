@@ -59,4 +59,6 @@ pub struct File {
 }
 
 #[derive(Clap)]
-pub struct Prometheus {}
+pub struct Prometheus {
+    pub url: String,
+}
