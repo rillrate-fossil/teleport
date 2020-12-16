@@ -1,5 +1,5 @@
 use crate::actor::Teleport;
-use crate::logparser::LogFormat;
+use crate::loggers::LogFormat;
 use anyhow::Error;
 use derive_more::{Deref, DerefMut, From};
 use meio::prelude::{Action, Address};

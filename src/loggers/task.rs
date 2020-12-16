@@ -1,5 +1,5 @@
-use crate::logparser::{LogFormat, LogParser, LogRecord};
-use crate::supplier::Supplier;
+use super::parser::{LogFormat, LogParser, LogRecord};
+use super::supplier::Supplier;
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::{select, FutureExt, StreamExt};

@@ -1,4 +1,4 @@
-use crate::logparser::LogFormat;
+use crate::loggers::LogFormat;
 use clap::Clap;
 use std::str::FromStr;
 use thiserror::Error;

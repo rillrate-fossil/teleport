@@ -1,5 +1,5 @@
-use crate::log_task::LogTask;
-use crate::{link, supplier};
+use super::link;
+use crate::loggers::{supplier, LogTask};
 use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::{

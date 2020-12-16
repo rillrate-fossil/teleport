@@ -1,9 +1,7 @@
 mod actor;
 mod link;
-mod log_task;
-mod logparser;
+mod loggers;
 mod opts;
-mod supplier;
 
 use actor::Teleport;
 use anyhow::Error;
