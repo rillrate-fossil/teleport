@@ -1,1 +1,1 @@
-mod prometheus;
+pub mod prometheus;

@@ -3,6 +3,7 @@ use crate::loggers::LogFormat;
 use anyhow::Error;
 use derive_more::{Deref, DerefMut, From};
 use meio::prelude::{Action, Address};
+use reqwest::Url;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, From, Deref, DerefMut)]
@@ -38,6 +39,20 @@ impl TeleportLink {
     ) -> Result<(), Error> {
         let path = path.as_ref().to_path_buf();
         let msg = BindFile { path, format };
+        self.address.act(msg).await
+    }
+}
+
+pub(super) struct BindPrometheus {
+    pub url: Url,
+}
+
+impl Action for BindPrometheus {}
+
+impl TeleportLink {
+    pub async fn bind_prometheus(&mut self, url: &str) -> Result<(), Error> {
+        let url = Url::parse(url)?;
+        let msg = BindPrometheus { url };
         self.address.act(msg).await
     }
 }

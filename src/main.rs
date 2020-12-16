@@ -25,7 +25,7 @@ async fn main() -> Result<(), Error> {
             link.bind_file(file.path, file.format.into()).await?;
         }
         SubCommand::Prometheus(prometheus) => {
-            todo!();
+            link.bind_prometheus(&prometheus.url).await?;
         }
     }
     link.interrupt()?;

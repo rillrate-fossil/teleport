@@ -1,4 +1,5 @@
 use super::link;
+use crate::adapters::prometheus::PrometheusTask;
 use crate::loggers::{supplier, LogTask};
 use anyhow::Error;
 use async_trait::async_trait;
@@ -59,6 +60,19 @@ impl ActionHandler<link::BindFile> for Teleport {
     async fn handle(&mut self, msg: link::BindFile, ctx: &mut Context<Self>) -> Result<(), Error> {
         let supplier = supplier::file(msg.path);
         let task = LogTask::new(supplier, msg.format.into());
+        ctx.bind_task(task, ());
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl ActionHandler<link::BindPrometheus> for Teleport {
+    async fn handle(
+        &mut self,
+        msg: link::BindPrometheus,
+        ctx: &mut Context<Self>,
+    ) -> Result<(), Error> {
+        let task = PrometheusTask::new(msg.url);
         ctx.bind_task(task, ());
         Ok(())
     }
