@@ -1,12 +1,10 @@
-mod actor;
-mod link;
+mod actors;
 mod loggers;
 mod opts;
 
-use actor::Teleport;
+use actors::teleport::{Teleport, TeleportLink};
 use anyhow::Error;
 use clap::Clap;
-use link::TeleportLink;
 use meio::prelude::Link;
 use opts::{Opts, SubCommand};
 

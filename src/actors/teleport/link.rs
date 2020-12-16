@@ -1,4 +1,4 @@
-use crate::actor::Teleport;
+use super::Teleport;
 use crate::loggers::LogFormat;
 use anyhow::Error;
 use derive_more::{Deref, DerefMut, From};
