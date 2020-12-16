@@ -1,7 +1,7 @@
 use anyhow::Error;
 use async_trait::async_trait;
-use futures::{select, FutureExt};
 use meio::prelude::{LiteTask, ShutdownReceiver};
+use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
 use tokio::time::{delay_for, Duration};
 
@@ -21,23 +21,28 @@ impl PrometheusTask {
             url,
         }
     }
+
+    async fn get_metrics(&self) -> Result<(), Error> {
+        let text = self
+            .client
+            .get(self.url.clone())
+            .send()
+            .await?
+            .text()
+            .await?;
+        let metrics = parse(&text)?;
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl LiteTask for PrometheusTask {
-    async fn routine(mut self, signal: ShutdownReceiver) -> Result<(), Error> {
-        let mut done = signal.just_done();
-        let duration = self.interval;
+    async fn routine(mut self, mut signal: ShutdownReceiver) -> Result<(), Error> {
         loop {
-            select! {
-                _ = delay_for(duration).fuse() => {
-                    // TODO: Repeat request
-                }
-                _ = done => {
-                    break;
-                }
+            if let Err(err) = signal.or(self.get_metrics()).await? {
+                log::error!("Can't fetch metrics from {}: {}", self.url, err);
             }
+            signal.or(delay_for(self.interval)).await?;
         }
-        Ok(())
     }
 }
