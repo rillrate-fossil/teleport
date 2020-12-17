@@ -3,9 +3,7 @@ use async_trait::async_trait;
 use meio::prelude::{LiteTask, StopReceiver};
 use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
-use rill::pathfinder::{Pathfinder, Record};
-use rill::protocol::{EntryId, Path};
-use rill::provider::LogProvider;
+use rill::prelude::{EntryId, LogProvider, Path, Pathfinder, Record};
 use tokio::time::{delay_for, Duration};
 
 pub struct PrometheusTask {

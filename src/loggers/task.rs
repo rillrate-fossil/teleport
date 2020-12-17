@@ -4,10 +4,7 @@ use anyhow::Error;
 use async_trait::async_trait;
 use futures::{select, StreamExt};
 use meio::prelude::{LiteTask, StopReceiver};
-use rill::{
-    pathfinder::{Pathfinder, Record},
-    provider::LogProvider,
-};
+use rill::prelude::{LogProvider, Pathfinder, Record};
 
 pub struct LogTask<T: Supplier> {
     supplier: T,
