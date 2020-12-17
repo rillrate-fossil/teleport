@@ -40,7 +40,7 @@ impl PrometheusTask {
             if let Some(provider) = provider {
                 if provider.is_active() {
                     let message = format!("{:?}", metric.metrics);
-                    provider.log("".into(), message);
+                    provider.log(message, None);
                 }
             } else {
                 log::debug!("Found metric: {}", metric.name);

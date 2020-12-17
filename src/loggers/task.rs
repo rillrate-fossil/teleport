@@ -34,7 +34,8 @@ impl<T: Supplier> LiteTask for LogTask<T> {
                                 let provider = providers.find(&path).and_then(Record::get_link);
                                 if let Some(provider) = provider {
                                     if provider.is_active() {
-                                        provider.log(timestamp, message);
+                                        // TODO: Convert timestamp to `SystemTime`
+                                        provider.log(message, None);
                                     }
                                 } else {
                                     let provider = LogProvider::new(path.clone());
