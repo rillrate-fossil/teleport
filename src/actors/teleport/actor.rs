@@ -72,7 +72,7 @@ impl ActionHandler<link::BindPrometheus> for Teleport {
         msg: link::BindPrometheus,
         ctx: &mut Context<Self>,
     ) -> Result<(), Error> {
-        let task = PrometheusTask::new(msg.url);
+        let task = PrometheusTask::new(msg.url, msg.interval);
         ctx.spawn_task(task, ());
         Ok(())
     }

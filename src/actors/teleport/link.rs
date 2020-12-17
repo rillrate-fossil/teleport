@@ -5,6 +5,7 @@ use derive_more::{Deref, DerefMut, From};
 use meio::prelude::{Action, Address};
 use reqwest::Url;
 use std::path::{Path, PathBuf};
+use tokio::time::Duration;
 
 #[derive(Debug, From, Deref, DerefMut)]
 pub struct TeleportLink {
@@ -45,14 +46,16 @@ impl TeleportLink {
 
 pub(super) struct BindPrometheus {
     pub url: Url,
+    pub interval: Duration,
 }
 
 impl Action for BindPrometheus {}
 
 impl TeleportLink {
-    pub async fn bind_prometheus(&mut self, url: &str) -> Result<(), Error> {
+    pub async fn bind_prometheus(&mut self, url: &str, interval_ms: u64) -> Result<(), Error> {
         let url = Url::parse(url)?;
-        let msg = BindPrometheus { url };
+        let interval = Duration::from_millis(interval_ms);
+        let msg = BindPrometheus { url, interval };
         self.address.act(msg).await
     }
 }

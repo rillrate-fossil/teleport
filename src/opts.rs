@@ -61,4 +61,6 @@ pub struct File {
 #[derive(Clap)]
 pub struct Prometheus {
     pub url: String,
+    #[clap(long, default_value = "1_000", about = "interval of updating (ms)")]
+    pub interval: u64,
 }

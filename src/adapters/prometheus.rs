@@ -16,9 +16,8 @@ pub struct PrometheusTask {
 }
 
 impl PrometheusTask {
-    pub fn new(url: Url) -> Self {
+    pub fn new(url: Url, interval: Duration) -> Self {
         let client = Client::new();
-        let interval = Duration::from_secs(1);
         Self {
             client,
             interval,
