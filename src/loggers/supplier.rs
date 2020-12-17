@@ -5,7 +5,7 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
 use tokio::fs::File;
 use tokio::io::{self, AsyncBufReadExt, /* tokio 0.3: AsyncSeekExt,*/ BufReader, SeekFrom};
-use tokio::sync::watch;
+use tokio::sync::mpsc;
 
 pub trait Supplier:
     Stream<Item = Result<String, Error>> + FusedStream + Unpin + Send + 'static
@@ -37,20 +37,13 @@ pub fn file(path: impl AsRef<Path>) -> impl Supplier {
 
 fn watch_file(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
     try_stream! {
-        let (tx, mut rx) = watch::channel(None);
-        let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| {
-            // tokio 0.3: if let Err(err) = tx.send(Some(res)) {
-            if let Err(err) = tx.broadcast(Some(std::sync::Arc::new(res))) {
-                log::error!("Can't send inotify signal: {}", err);
-            }
-        })?;
-        watcher.watch(&path, RecursiveMode::NonRecursive)?;
         let mut position = 0;
         loop {
             {
                 let mut file = File::open(&path).await?;
                 let total = file.seek(SeekFrom::End(0)).await?;
-                if position < total {
+                log::debug!("Reading file: size = {}, position = {}", total, position);
+                if position <= total {
                     file.seek(SeekFrom::Start(position)).await?;
                 } else {
                     log::warn!("Log file completely changes (size reset). Reading from the start.");
@@ -59,13 +52,25 @@ fn watch_file(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
                 {
                     let mut lines = BufReader::new(&mut file).lines();
                     while let Some(line) = lines.next().await.transpose()? {
+                        log::trace!("Line: {}", line);
                         yield line;
                     }
                 }
                 position = total;
+                drop(file);
             }
+            // It's important to create a new watched, because file can be removed and the
+            // watch object lost.
+            let (tx, mut rx) = mpsc::unbounded_channel();
+            let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| {
+                // tokio 0.3: if let Err(err) = tx.send(Some(res)) {
+                log::trace!("Event: {:?}", res);
+                tx.send(res).ok();
+            })?;
+            watcher.watch(&path, RecursiveMode::NonRecursive)?;
+            log::trace!("Waiting for changes of: {}", path.as_path().display());
             // tokio 0.3: rx.changed().await?;
-            rx.recv().await;
+            rx.next().await;
         }
     }
 }
