@@ -50,7 +50,7 @@ impl ActionHandler<link::BindStdin> for Teleport {
     async fn handle(&mut self, msg: link::BindStdin, ctx: &mut Context<Self>) -> Result<(), Error> {
         let supplier = supplier::stdin();
         let task = LogTask::new(supplier, msg.format.into());
-        ctx.bind_task(task, ());
+        ctx.spawn_task(task, ());
         Ok(())
     }
 }
@@ -60,7 +60,7 @@ impl ActionHandler<link::BindFile> for Teleport {
     async fn handle(&mut self, msg: link::BindFile, ctx: &mut Context<Self>) -> Result<(), Error> {
         let supplier = supplier::file(msg.path);
         let task = LogTask::new(supplier, msg.format.into());
-        ctx.bind_task(task, ());
+        ctx.spawn_task(task, ());
         Ok(())
     }
 }
@@ -73,7 +73,7 @@ impl ActionHandler<link::BindPrometheus> for Teleport {
         ctx: &mut Context<Self>,
     ) -> Result<(), Error> {
         let task = PrometheusTask::new(msg.url);
-        ctx.bind_task(task, ());
+        ctx.spawn_task(task, ());
         Ok(())
     }
 }

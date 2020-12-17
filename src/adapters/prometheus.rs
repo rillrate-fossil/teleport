@@ -1,6 +1,6 @@
 use anyhow::Error;
 use async_trait::async_trait;
-use meio::prelude::{LiteTask, ShutdownReceiver};
+use meio::prelude::{LiteTask, StopReceiver};
 use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
 use tokio::time::{delay_for, Duration};
@@ -37,12 +37,12 @@ impl PrometheusTask {
 
 #[async_trait]
 impl LiteTask for PrometheusTask {
-    async fn routine(mut self, mut signal: ShutdownReceiver) -> Result<(), Error> {
+    async fn routine(mut self, mut stop: StopReceiver) -> Result<(), Error> {
         loop {
-            if let Err(err) = signal.or(self.get_metrics()).await? {
+            if let Err(err) = stop.or(self.get_metrics()).await? {
                 log::error!("Can't fetch metrics from {}: {}", self.url, err);
             }
-            signal.or(delay_for(self.interval)).await?;
+            stop.or(delay_for(self.interval)).await?;
         }
     }
 }
