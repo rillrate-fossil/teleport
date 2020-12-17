@@ -3,12 +3,16 @@ use async_trait::async_trait;
 use meio::prelude::{LiteTask, StopReceiver};
 use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
+use rill::pathfinder::{Pathfinder, Record};
+use rill::protocol::{EntryId, Path};
+use rill::provider::LogProvider;
 use tokio::time::{delay_for, Duration};
 
 pub struct PrometheusTask {
     client: Client,
     interval: Duration,
     url: Url,
+    providers: Pathfinder<LogProvider>,
 }
 
 impl PrometheusTask {
@@ -19,10 +23,11 @@ impl PrometheusTask {
             client,
             interval,
             url,
+            providers: Pathfinder::new(),
         }
     }
 
-    async fn get_metrics(&self) -> Result<(), Error> {
+    async fn get_metrics(&mut self) -> Result<(), Error> {
         let text = self
             .client
             .get(self.url.clone())
@@ -31,6 +36,21 @@ impl PrometheusTask {
             .text()
             .await?;
         let metrics = parse(&text)?;
+        for metric in metrics {
+            let entries: Vec<_> = metric.name.split("_").map(EntryId::from).collect();
+            let path = Path::from(entries);
+            let provider = self.providers.find(&path).and_then(Record::get_link);
+            if let Some(provider) = provider {
+                if provider.is_active() {
+                    let message = format!("{:?}", metric.metrics);
+                    provider.log("".into(), message);
+                }
+            } else {
+                log::debug!("Found metric: {}", metric.name);
+                let provider = LogProvider::new(path.clone());
+                self.providers.dig(path).set_link(provider);
+            }
+        }
         Ok(())
     }
 }
