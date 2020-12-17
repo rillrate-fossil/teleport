@@ -6,7 +6,7 @@ mod opts;
 use actors::teleport::{Teleport, TeleportLink};
 use anyhow::Error;
 use clap::Clap;
-use meio::prelude::Link;
+use meio::prelude::{Link, System};
 use opts::{Opts, SubCommand};
 
 #[tokio::main]
@@ -15,8 +15,8 @@ async fn main() -> Result<(), Error> {
     let opts: Opts = Opts::parse();
     let name = opts.name.unwrap_or_else(|| "teleport".into());
     rill::install(name)?;
-    let teleport = Teleport::new();
-    let mut link: TeleportLink = meio::spawn(teleport).link();
+    let teleport = System::spawn(Teleport::new());
+    let mut link: TeleportLink = teleport.link();
     match opts.subcmd {
         SubCommand::Stdin(stdin) => {
             link.bind_stdin(stdin.format.into()).await?;
@@ -28,8 +28,7 @@ async fn main() -> Result<(), Error> {
             link.bind_prometheus(&prometheus.url).await?;
         }
     }
-    link.interrupt()?;
-    link.join().await;
+    System::wait_or_interrupt(teleport).await?;
     rill::terminate()?;
 
     // I have to use `exit` call here, because:
