@@ -23,11 +23,11 @@ derive_more = "0.99.11"
 env_logger = "0.8.2"
 futures = "0.3.8"
 log = "0.4.11"
-meio = "0.31.0"
+meio = "0.40.0"
 notify = "5.0.0-pre.4"
 prometheus-parser = { git = "ssh://git@github.com/rate-technology/prometheus-parser.git" }
 regex = "1.4.2"
 reqwest = "0.10.10"
-rill = "0.5.0"
+rill = "0.6.0"
 thiserror = "1.0.22"
 tokio = { version = "0.2.22", features = ["full"] }
