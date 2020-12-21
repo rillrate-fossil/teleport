@@ -4,8 +4,7 @@ use crate::loggers::{supplier, LogTask};
 use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::{
-    ActionHandler, Actor, Context, Eliminated, IdOf, InterruptedBy, LiteTask, StartedBy, System,
-    Task,
+    ActionHandler, Actor, Context, IdOf, InterruptedBy, LiteTask, StartedBy, System, TaskEliminated,
 };
 
 pub struct Teleport {}
@@ -70,8 +69,8 @@ impl ActionHandler<link::BindPrometheus> for Teleport {
 }
 
 #[async_trait]
-impl<T: LiteTask> Eliminated<Task<T>> for Teleport {
-    async fn handle(&mut self, _id: IdOf<Task<T>>, ctx: &mut Context<Self>) -> Result<(), Error> {
+impl<T: LiteTask> TaskEliminated<T> for Teleport {
+    async fn handle(&mut self, _id: IdOf<T>, ctx: &mut Context<Self>) -> Result<(), Error> {
         ctx.shutdown();
         Ok(())
     }
