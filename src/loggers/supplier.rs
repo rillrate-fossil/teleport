@@ -4,7 +4,7 @@ use futures::{stream::FusedStream, Stream, StreamExt};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
 use tokio::fs::File;
-use tokio::io::{self, AsyncBufReadExt, /* tokio 0.3: AsyncSeekExt,*/ BufReader, SeekFrom};
+use tokio::io::{self, AsyncBufReadExt, AsyncSeekExt, BufReader, SeekFrom};
 use tokio::sync::mpsc;
 
 pub trait Supplier:
@@ -24,7 +24,7 @@ pub fn stdin() -> impl Supplier {
 fn watch_stdin() -> impl Stream<Item = Result<String, Error>> {
     try_stream! {
         let mut stdin = BufReader::new(io::stdin()).lines();
-        while let Some(line) = stdin.next().await.transpose()? {
+        while let Some(line) = stdin.next_line().await? {
             yield line;
         }
     }
@@ -51,7 +51,7 @@ fn watch_file(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
                 }
                 {
                     let mut lines = BufReader::new(&mut file).lines();
-                    while let Some(line) = lines.next().await.transpose()? {
+                    while let Some(line) = lines.next_line().await? {
                         log::trace!("Line: {}", line);
                         yield line;
                     }
@@ -70,7 +70,7 @@ fn watch_file(path: PathBuf) -> impl Stream<Item = Result<String, Error>> {
             watcher.watch(&path, RecursiveMode::NonRecursive)?;
             log::trace!("Waiting for changes of: {}", path.as_path().display());
             // tokio 0.3: rx.changed().await?;
-            rx.next().await;
+            rx.recv().await;
         }
     }
 }

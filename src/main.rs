@@ -6,15 +6,16 @@ mod opts;
 use actors::teleport::{Teleport, TeleportLink};
 use anyhow::Error;
 use clap::Clap;
-use meio::prelude::{Link, System};
+use meio::prelude::System;
 use opts::{Opts, SubCommand};
+use rillrate::RillRate;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     env_logger::try_init()?;
     let opts: Opts = Opts::parse();
     let name = opts.name.unwrap_or_else(|| "teleport".into());
-    rill::install(name)?;
+    let rillrate = RillRate::from_env(&name)?;
     let teleport = System::spawn(Teleport::new());
     let mut link: TeleportLink = teleport.link();
     match opts.subcmd {
@@ -30,7 +31,7 @@ async fn main() -> Result<(), Error> {
         }
     }
     System::wait_or_interrupt(teleport).await?;
-    rill::terminate()?;
+    drop(rillrate);
 
     // I have to use `exit` call here, because:
     //

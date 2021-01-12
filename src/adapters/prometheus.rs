@@ -1,10 +1,12 @@
 use anyhow::Error;
 use async_trait::async_trait;
-use meio::prelude::{LiteTask, StopReceiver};
+use meio::prelude::LiteTask;
 use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
-use rill::prelude::{EntryId, LogProvider, Path, Pathfinder, Record};
-use tokio::time::{delay_for, Duration};
+use rill_protocol::pathfinder::{Pathfinder, Record};
+use rill_protocol::provider::{EntryId, Path};
+use rillrate::LogProvider;
+use std::time::{Duration, Instant};
 
 pub struct PrometheusTask {
     client: Client,
@@ -54,12 +56,14 @@ impl PrometheusTask {
 
 #[async_trait]
 impl LiteTask for PrometheusTask {
-    async fn routine(mut self, mut stop: StopReceiver) -> Result<(), Error> {
-        loop {
-            if let Err(err) = stop.or(self.get_metrics()).await? {
-                log::error!("Can't fetch metrics from {}: {}", self.url, err);
-            }
-            stop.or(delay_for(self.interval)).await?;
-        }
+    type Output = ();
+
+    async fn repeatable_routine(&mut self) -> Result<(), Error> {
+        self.get_metrics().await
+        //log::error!("Can't fetch metrics from {}: {}", self.url, err);
+    }
+
+    fn retry_delay(&self, _last_attempt: Instant) -> Duration {
+        self.interval
     }
 }

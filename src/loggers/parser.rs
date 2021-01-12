@@ -1,6 +1,6 @@
 use anyhow::Error;
 use regex::Regex;
-use rill::protocol::{EntryId, Path};
+use rill_protocol::provider::{EntryId, Path};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

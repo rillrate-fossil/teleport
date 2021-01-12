@@ -4,7 +4,8 @@ use anyhow::Error;
 use async_trait::async_trait;
 use futures::{select, StreamExt};
 use meio::prelude::{LiteTask, StopReceiver};
-use rill::prelude::{LogProvider, Pathfinder, Record};
+use rill_protocol::pathfinder::{Pathfinder, Record};
+use rillrate::LogProvider;
 
 pub struct LogTask<T: Supplier> {
     supplier: T,
@@ -19,6 +20,9 @@ impl<T: Supplier> LogTask<T> {
 
 #[async_trait]
 impl<T: Supplier> LiteTask for LogTask<T> {
+    type Output = ();
+
+    // TODO: Change to??? interruptable routine.
     async fn routine(mut self, stop: StopReceiver) -> Result<(), Error> {
         let log_parser = LogParser::build(self.format)?;
         let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
@@ -30,7 +34,7 @@ impl<T: Supplier> LiteTask for LogTask<T> {
                     if let Some(line) = line.transpose()? {
                         let res = log_parser.parse(&line);
                         match res {
-                            Ok(LogRecord { path, timestamp, message }) => {
+                            Ok(LogRecord { path, message, .. }) => {
                                 let provider = providers.find(&path).and_then(Record::get_link);
                                 if let Some(provider) = provider {
                                     if provider.is_active() {
