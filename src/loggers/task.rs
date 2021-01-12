@@ -2,8 +2,8 @@ use super::parser::{LogFormat, LogParser, LogRecord};
 use super::supplier::Supplier;
 use anyhow::Error;
 use async_trait::async_trait;
-use futures::{select, StreamExt};
-use meio::prelude::{LiteTask, StopReceiver};
+use futures::StreamExt;
+use meio::prelude::LiteTask;
 use rill_protocol::pathfinder::{Pathfinder, Record};
 use rillrate::LogProvider;
 
@@ -23,40 +23,33 @@ impl<T: Supplier> LiteTask for LogTask<T> {
     type Output = ();
 
     // TODO: Change to??? interruptable routine.
-    async fn routine(mut self, stop: StopReceiver) -> Result<(), Error> {
+    async fn interruptable_routine(mut self) -> Result<Self::Output, Error> {
         let log_parser = LogParser::build(self.format)?;
         let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
-        let mut done = stop.into_future();
         let supplier = &mut self.supplier;
         loop {
-            select! {
-                line = supplier.next() => {
-                    if let Some(line) = line.transpose()? {
-                        let res = log_parser.parse(&line);
-                        match res {
-                            Ok(LogRecord { path, message, .. }) => {
-                                let provider = providers.find(&path).and_then(Record::get_link);
-                                if let Some(provider) = provider {
-                                    if provider.is_active() {
-                                        // TODO: Convert timestamp to `SystemTime`
-                                        provider.log(message, None);
-                                    }
-                                } else {
-                                    let provider = LogProvider::new(path.clone());
-                                    providers.dig(path).set_link(provider);
-                                }
+            if let Some(line) = supplier.next().await.transpose()? {
+                let res = log_parser.parse(&line);
+                match res {
+                    Ok(LogRecord { path, message, .. }) => {
+                        let provider = providers.find(&path).and_then(Record::get_link);
+                        if let Some(provider) = provider {
+                            if provider.is_active() {
+                                // TODO: Convert timestamp to `SystemTime`
+                                provider.log(message, None);
                             }
-                            Err(err) => {
-                                log::error!("Can't parse line \"{}\": {}", line, err);
-                            }
+                        } else {
+                            let provider = LogProvider::new(path.clone());
+                            providers.dig(path).set_link(provider);
                         }
-                    } else {
-                        break;
+                    }
+                    Err(err) => {
+                        // Skipping the line
+                        log::error!("Can't parse line \"{}\": {}", line, err);
                     }
                 }
-                _ = done => {
-                    break;
-                }
+            } else {
+                break;
             }
         }
         Ok(())
