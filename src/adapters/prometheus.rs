@@ -3,9 +3,8 @@ use async_trait::async_trait;
 use meio::prelude::LiteTask;
 use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
-use rill_protocol::pathfinder::{Pathfinder, Record};
-use rill_protocol::provider::{EntryId, Path};
-use rillrate::LogProvider;
+use rillrate::protocol::pathfinder::{Pathfinder, Record};
+use rillrate::{EntryId, LogProvider, Path};
 use std::time::{Duration, Instant};
 
 pub struct PrometheusTask {

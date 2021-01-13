@@ -28,7 +28,6 @@ notify = "5.0.0-pre.4"
 prometheus-parser = { git = "ssh://git@github.com/rate-technology/prometheus-parser.git" }
 regex = "1.4.3"
 reqwest = "0.11.0"
-rill-protocol = "0.12.0"
 rillrate = "0.12.0"
 thiserror = "1.0.23"
 tokio = { version = "1.0.1", features = ["full"] }

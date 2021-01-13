@@ -1869,7 +1869,6 @@ dependencies = [
  "prometheus-parser",
  "regex",
  "reqwest",
- "rill-protocol",
  "rillrate",
  "thiserror",
  "tokio",

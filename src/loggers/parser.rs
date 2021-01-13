@@ -1,6 +1,6 @@
 use anyhow::Error;
 use regex::Regex;
-use rill_protocol::provider::{EntryId, Path};
+use rillrate::{EntryId, Path};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

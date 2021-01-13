@@ -4,7 +4,7 @@ use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
 use meio::prelude::LiteTask;
-use rill_protocol::pathfinder::{Pathfinder, Record};
+use rillrate::protocol::pathfinder::{Pathfinder, Record};
 use rillrate::LogProvider;
 
 pub struct LogTask<T: Supplier> {
