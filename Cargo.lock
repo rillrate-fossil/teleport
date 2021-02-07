@@ -1528,9 +1528,9 @@ dependencies = [
 
 [[package]]
 name = "rill"
-version = "0.17.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5869e22b8f0534e798c79cde86c6a0f23b3f832c8ab0951f5c4481b062dc10d3"
+checksum = "620103b8a221be21ee3cb1c07fb80193f4f73dd6d5e8b496d69113f2cc5b4bc9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1550,9 +1550,9 @@ dependencies = [
 
 [[package]]
 name = "rill-export"
-version = "0.17.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90b214313503258236914f6674badc494a5a446497f8cba9e6a7038fa3aa5fd1"
+checksum = "a6efc882573da437ce170c632a679ef4b1d33eab0e78216999461a5a3e9b22df"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1578,9 +1578,9 @@ dependencies = [
 
 [[package]]
 name = "rill-protocol"
-version = "0.17.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e44dbef727af7f59e1086167ba5a334c9941cbaf9c2d56453b20eb52bce0c137"
+checksum = "7462a45722c458a69960559e02c2a3c2544af0da014093d7f6daf9d79e96bd36"
 dependencies = [
  "anyhow",
  "derive_more",
@@ -1593,9 +1593,9 @@ dependencies = [
 
 [[package]]
 name = "rillrate"
-version = "0.17.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4a468b4f70023d65381192b7142dba753dc803a3292d0bd8a808c4f610451ff"
+checksum = "fce6accdf5531f59bdbc0eb5fdffe072f5b1581a751f5b8521abaa1ce8152b62"
 dependencies = [
  "anyhow",
  "log",

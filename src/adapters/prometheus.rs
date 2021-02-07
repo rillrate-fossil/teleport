@@ -4,14 +4,15 @@ use meio::prelude::LiteTask;
 use prometheus_parser::group_metrics as parse;
 use reqwest::{Client, Url};
 use rillrate::protocol::pathfinder::{Pathfinder, Record};
-use rillrate::{EntryId, LogProvider, Path};
+use rillrate::protocol::provider::{EntryId, Path};
+use rillrate::rill::prelude::LogTracer;
 use std::time::{Duration, Instant};
 
 pub struct PrometheusTask {
     client: Client,
     interval: Duration,
     url: Url,
-    providers: Pathfinder<LogProvider>,
+    tracers: Pathfinder<LogTracer>,
 }
 
 impl PrometheusTask {
@@ -21,7 +22,7 @@ impl PrometheusTask {
             client,
             interval,
             url,
-            providers: Pathfinder::new(),
+            tracers: Pathfinder::new(),
         }
     }
 
@@ -37,16 +38,16 @@ impl PrometheusTask {
         for metric in metrics {
             let entries: Vec<_> = metric.name.split("_").map(EntryId::from).collect();
             let path = Path::from(entries);
-            let provider = self.providers.find(&path).and_then(Record::get_link);
-            if let Some(provider) = provider {
-                if provider.is_active() {
+            let tracer = self.tracers.find(&path).and_then(Record::get_link);
+            if let Some(tracer) = tracer {
+                if tracer.is_active() {
                     let message = format!("{:?}", metric.metrics);
-                    provider.log(message, None);
+                    tracer.log(message, None);
                 }
             } else {
                 log::debug!("Found metric: {}", metric.name);
-                let provider = LogProvider::new(path.clone());
-                self.providers.dig(path).set_link(provider);
+                let tracer = LogTracer::new(path.clone(), false);
+                self.tracers.dig(path).set_link(tracer);
             }
         }
         Ok(())

@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use meio::prelude::LiteTask;
 use rillrate::protocol::pathfinder::{Pathfinder, Record};
-use rillrate::LogProvider;
+use rillrate::rill::prelude::LogTracer;
 
 pub struct LogTask<T: Supplier> {
     supplier: T,
@@ -25,22 +25,22 @@ impl<T: Supplier> LiteTask for LogTask<T> {
     // TODO: Change to??? interruptable routine.
     async fn interruptable_routine(mut self) -> Result<Self::Output, Error> {
         let log_parser = LogParser::build(self.format)?;
-        let mut providers: Pathfinder<LogProvider> = Pathfinder::new();
+        let mut tracers: Pathfinder<LogTracer> = Pathfinder::new();
         let supplier = &mut self.supplier;
         loop {
             if let Some(line) = supplier.next().await.transpose()? {
                 let res = log_parser.parse(&line);
                 match res {
                     Ok(LogRecord { path, message, .. }) => {
-                        let provider = providers.find(&path).and_then(Record::get_link);
-                        if let Some(provider) = provider {
-                            if provider.is_active() {
+                        let tracer = tracers.find(&path).and_then(Record::get_link);
+                        if let Some(tracer) = tracer {
+                            if tracer.is_active() {
                                 // TODO: Convert timestamp to `SystemTime`
-                                provider.log(message, None);
+                                tracer.log(message, None);
                             }
                         } else {
-                            let provider = LogProvider::new(path.clone());
-                            providers.dig(path).set_link(provider);
+                            let tracer = LogTracer::new(path.clone(), false);
+                            tracers.dig(path).set_link(tracer);
                         }
                     }
                     Err(err) => {
