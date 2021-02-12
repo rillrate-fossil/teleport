@@ -43,6 +43,8 @@ pub enum SubCommand {
     File(File),
     #[clap(about = "Polls Prometheus metrics endpoint")]
     Prometheus(Prometheus),
+    #[clap(about = "Check an HTTP endpoint status")]
+    Healthcheck(Healthcheck),
 }
 
 #[derive(Clap)]
@@ -62,5 +64,16 @@ pub struct File {
 pub struct Prometheus {
     pub url: String,
     #[clap(long, default_value = "1_000", about = "interval of updating (ms)")]
+    pub interval: u64,
+}
+
+#[derive(Clap)]
+pub struct Healthcheck {
+    pub url: String,
+    #[clap(
+        long,
+        default_value = "5_000",
+        about = "interval of healthchecking (ms)"
+    )]
     pub interval: u64,
 }

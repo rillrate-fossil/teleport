@@ -1,5 +1,6 @@
 mod actors;
 mod adapters;
+mod healthcheck;
 mod loggers;
 mod opts;
 
@@ -19,15 +20,17 @@ async fn main() -> Result<(), Error> {
     let teleport = System::spawn(Teleport::new());
     let mut link: TeleportLink = teleport.link();
     match opts.subcmd {
-        SubCommand::Stdin(stdin) => {
-            link.bind_stdin(stdin.format.into()).await?;
+        SubCommand::Stdin(params) => {
+            link.bind_stdin(params.format.into()).await?;
         }
-        SubCommand::File(file) => {
-            link.bind_file(file.path, file.format.into()).await?;
+        SubCommand::File(params) => {
+            link.bind_file(params.path, params.format.into()).await?;
         }
-        SubCommand::Prometheus(prometheus) => {
-            link.bind_prometheus(&prometheus.url, prometheus.interval)
-                .await?;
+        SubCommand::Prometheus(params) => {
+            link.bind_prometheus(&params.url, params.interval).await?;
+        }
+        SubCommand::Healthcheck(params) => {
+            link.bind_healthcheck(&params.url, params.interval).await?;
         }
     }
     System::wait_or_interrupt(teleport).await?;
