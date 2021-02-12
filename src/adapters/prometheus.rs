@@ -58,9 +58,9 @@ impl PrometheusTask {
 impl LiteTask for PrometheusTask {
     type Output = ();
 
-    async fn repeatable_routine(&mut self) -> Result<(), Error> {
-        self.get_metrics().await
-        //log::error!("Can't fetch metrics from {}: {}", self.url, err);
+    async fn repeatable_routine(&mut self) -> Result<Option<Self::Output>, Error> {
+        self.get_metrics().await?;
+        Ok(None)
     }
 
     fn retry_delay(&self, _last_attempt: Instant) -> Duration {
