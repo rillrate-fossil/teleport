@@ -86,3 +86,17 @@ impl TeleportLink {
         self.address.act(msg).await
     }
 }
+
+pub(super) struct BindDockerStats {
+    pub name: String,
+}
+
+impl Action for BindDockerStats {}
+
+impl TeleportLink {
+    pub async fn bind_docker_stats(&mut self, name: &str) -> Result<(), Error> {
+        let name = name.into();
+        let msg = BindDockerStats { name };
+        self.address.act(msg).await
+    }
+}

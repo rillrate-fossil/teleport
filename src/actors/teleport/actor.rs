@@ -1,5 +1,6 @@
 use super::link;
 use crate::adapters::prometheus::PrometheusTask;
+use crate::docker_stats::DockerStatsTask;
 use crate::healthcheck::HealthcheckTask;
 use crate::loggers::{supplier, LogTask};
 use anyhow::Error;
@@ -84,6 +85,20 @@ impl ActionHandler<link::BindHealthcheck> for Teleport {
     ) -> Result<(), Error> {
         let path = Path::single(msg.name);
         let task = HealthcheckTask::new(path, msg.url, msg.interval);
+        ctx.spawn_task(task, ());
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl ActionHandler<link::BindDockerStats> for Teleport {
+    async fn handle(
+        &mut self,
+        msg: link::BindDockerStats,
+        ctx: &mut Context<Self>,
+    ) -> Result<(), Error> {
+        let path = Path::single(msg.name);
+        let task = DockerStatsTask::new(path);
         ctx.spawn_task(task, ());
         Ok(())
     }

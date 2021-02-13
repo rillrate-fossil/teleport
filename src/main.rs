@@ -1,5 +1,6 @@
 mod actors;
 mod adapters;
+mod docker_stats;
 mod healthcheck;
 mod loggers;
 mod opts;
@@ -31,6 +32,9 @@ async fn main() -> Result<(), Error> {
         SubCommand::Healthcheck(params) => {
             link.bind_healthcheck(&params.name, &params.url, params.interval)
                 .await?;
+        }
+        SubCommand::DockerStats(params) => {
+            link.bind_docker_stats(&params.name).await?;
         }
     }
     System::wait_or_interrupt(teleport).await?;

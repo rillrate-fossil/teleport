@@ -45,6 +45,8 @@ pub enum SubCommand {
     Prometheus(Prometheus),
     #[clap(about = "Check an HTTP endpoint status")]
     Healthcheck(Healthcheck),
+    #[clap(name = "docker", about = "Gets stats from the Docker daemon")]
+    DockerStats(DockerStats),
 }
 
 #[derive(Clap)]
@@ -78,4 +80,10 @@ pub struct Healthcheck {
         about = "interval of healthchecking (ms)"
     )]
     pub interval: u64,
+}
+
+#[derive(Clap)]
+pub struct DockerStats {
+    #[clap(long, default_value = "docker")]
+    pub name: String,
 }
