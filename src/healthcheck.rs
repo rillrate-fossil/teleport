@@ -17,7 +17,7 @@ impl HealthcheckTask {
     pub fn new(path: Path, url: Url, interval: Duration) -> Self {
         let client = Client::new();
         let roundtrip = GaugeTracer::new(path.concat("roundtrip"), false);
-        let status = LogTracer::new(path, false);
+        let status = LogTracer::new(path.concat("status"), false);
         Self {
             client,
             interval,
