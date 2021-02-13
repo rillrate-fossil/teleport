@@ -2,38 +2,39 @@ use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::LiteTask;
 use reqwest::{Client, Url};
-use rillrate::Gauge;
+use rillrate::rill::prelude::{GaugeTracer, LogTracer, Path};
 use std::time::{Duration, Instant};
 
 pub struct HealthcheckTask {
     client: Client,
     interval: Duration,
     url: Url,
-    roundtrip: Gauge,
+    roundtrip: GaugeTracer,
+    status: LogTracer,
 }
 
 impl HealthcheckTask {
-    pub fn new(url: Url, interval: Duration) -> Self {
+    pub fn new(path: Path, url: Url, interval: Duration) -> Self {
         let client = Client::new();
+        let roundtrip = GaugeTracer::new(path.concat("roundtrip"), false);
+        let status = LogTracer::new(path, false);
         Self {
             client,
             interval,
             url,
-            roundtrip: Gauge::create("endpoint.roundtrip").unwrap(),
+            roundtrip,
+            status,
         }
     }
 
     async fn check_endpoint(&mut self) -> Result<(), Error> {
         let when = Instant::now();
-        let _text = self
-            .client
-            .get(self.url.clone())
-            .send()
-            .await?
-            .text()
-            .await?;
+        let response = self.client.get(self.url.clone()).send().await?;
+        let status = response.status().to_string();
+        let _text = response.text().await?;
         let elapsed = when.elapsed().as_millis() as f64 / 1_000f64;
-        self.roundtrip.set(elapsed);
+        self.roundtrip.set(elapsed, None);
+        self.status.log(status, None);
         Ok(())
     }
 }

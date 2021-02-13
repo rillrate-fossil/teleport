@@ -29,7 +29,8 @@ async fn main() -> Result<(), Error> {
             link.bind_prometheus(&params.url, params.interval).await?;
         }
         SubCommand::Healthcheck(params) => {
-            link.bind_healthcheck(&params.url, params.interval).await?;
+            link.bind_healthcheck(&params.name, &params.url, params.interval)
+                .await?;
         }
     }
     System::wait_or_interrupt(teleport).await?;

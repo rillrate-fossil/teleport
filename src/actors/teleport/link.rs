@@ -61,6 +61,7 @@ impl TeleportLink {
 }
 
 pub(super) struct BindHealthcheck {
+    pub name: String,
     pub url: Url,
     pub interval: Duration,
 }
@@ -68,10 +69,20 @@ pub(super) struct BindHealthcheck {
 impl Action for BindHealthcheck {}
 
 impl TeleportLink {
-    pub async fn bind_healthcheck(&mut self, url: &str, interval_ms: u64) -> Result<(), Error> {
+    pub async fn bind_healthcheck(
+        &mut self,
+        name: &str,
+        url: &str,
+        interval_ms: u64,
+    ) -> Result<(), Error> {
+        let name = name.into();
         let url = Url::parse(url)?;
         let interval = Duration::from_millis(interval_ms);
-        let msg = BindHealthcheck { url, interval };
+        let msg = BindHealthcheck {
+            name,
+            url,
+            interval,
+        };
         self.address.act(msg).await
     }
 }

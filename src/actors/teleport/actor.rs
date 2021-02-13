@@ -8,6 +8,7 @@ use meio::prelude::{
     ActionHandler, Actor, Context, IdOf, InterruptedBy, LiteTask, StartedBy, System,
     TaskEliminated, TaskError,
 };
+use rillrate::rill::prelude::Path;
 
 pub struct Teleport {}
 
@@ -36,6 +37,10 @@ impl InterruptedBy<System> for Teleport {
         Ok(())
     }
 }
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// TODO: REPLACE ALL THAT BELOW TO `link::AttachTask`
+// and create tasks deparately in the `main` function
 
 #[async_trait]
 impl ActionHandler<link::BindStdin> for Teleport {
@@ -77,7 +82,8 @@ impl ActionHandler<link::BindHealthcheck> for Teleport {
         msg: link::BindHealthcheck,
         ctx: &mut Context<Self>,
     ) -> Result<(), Error> {
-        let task = HealthcheckTask::new(msg.url, msg.interval);
+        let path = Path::single(msg.name);
+        let task = HealthcheckTask::new(path, msg.url, msg.interval);
         ctx.spawn_task(task, ());
         Ok(())
     }

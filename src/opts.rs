@@ -69,6 +69,8 @@ pub struct Prometheus {
 
 #[derive(Clap)]
 pub struct Healthcheck {
+    #[clap(long, default_value = "endpoint")]
+    pub name: String,
     pub url: String,
     #[clap(
         long,
