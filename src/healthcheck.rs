@@ -1,3 +1,4 @@
+use crate::actors::teleport::TeleportTask;
 use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::LiteTask;
@@ -12,6 +13,8 @@ pub struct HealthcheckTask {
     roundtrip: GaugeTracer,
     status: LogTracer,
 }
+
+impl TeleportTask for HealthcheckTask {}
 
 impl HealthcheckTask {
     pub fn new(path: Path, url: Url, interval: Duration) -> Self {

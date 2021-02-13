@@ -33,7 +33,7 @@ thiserror = "1.0.23"
 tokio = { version = "1.2.0", features = ["full"] }
 
 # Optional parts
-shiplift = { git = "ssh://git@github.com/softprops/shiplift.git", optional = true, default-features = false }
+shiplift = { git = "ssh://git@github.com/softprops/shiplift.git", optional = true, default-features = false, features = ["unix-socket"] }
 
 [features]
 default = [

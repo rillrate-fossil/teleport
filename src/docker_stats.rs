@@ -1,3 +1,4 @@
+use crate::actors::teleport::TeleportTask;
 use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::LiteTask;
@@ -22,6 +23,8 @@ pub struct DockerStatsTask {
     containers: HashMap<String, TracingGroup>,
     path: Path,
 }
+
+impl TeleportTask for DockerStatsTask {}
 
 impl DockerStatsTask {
     pub fn new(path: Path) -> Self {

@@ -1,3 +1,4 @@
+use crate::actors::teleport::TeleportTask;
 use anyhow::Error;
 use async_trait::async_trait;
 use meio::prelude::LiteTask;
@@ -14,6 +15,8 @@ pub struct PrometheusTask {
     url: Url,
     tracers: Pathfinder<LogTracer>,
 }
+
+impl TeleportTask for PrometheusTask {}
 
 impl PrometheusTask {
     pub fn new(url: Url, interval: Duration) -> Self {

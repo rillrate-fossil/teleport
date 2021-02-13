@@ -105,7 +105,19 @@ impl ActionHandler<link::BindDockerStats> for Teleport {
 }
 
 #[async_trait]
-impl<T: LiteTask> TaskEliminated<T> for Teleport {
+impl<T: link::TeleportTask> ActionHandler<link::AttachTask<T>> for Teleport {
+    async fn handle(
+        &mut self,
+        msg: link::AttachTask<T>,
+        ctx: &mut Context<Self>,
+    ) -> Result<(), Error> {
+        ctx.spawn_task(msg.task, ());
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl<T: link::TeleportTask> TaskEliminated<T> for Teleport {
     async fn handle(
         &mut self,
         _id: IdOf<T>,

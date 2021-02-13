@@ -1,5 +1,6 @@
 use super::parser::{LogFormat, LogParser, LogRecord};
 use super::supplier::Supplier;
+use crate::actors::teleport::TeleportTask;
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
@@ -11,6 +12,8 @@ pub struct LogTask<T: Supplier> {
     supplier: T,
     format: LogFormat,
 }
+
+impl<T: Supplier> TeleportTask for LogTask<T> {}
 
 impl<T: Supplier> LogTask<T> {
     pub fn new(supplier: T, format: LogFormat) -> Self {
