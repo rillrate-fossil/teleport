@@ -15,8 +15,7 @@ use rillrate::RillRate;
 async fn main() -> Result<(), Error> {
     env_logger::try_init()?;
     let opts: Opts = Opts::parse();
-    let name = opts.name.unwrap_or_else(|| "teleport".into());
-    let rillrate = RillRate::from_env(&name)?;
+    let rillrate = RillRate::from_env(&opts.name)?;
     let teleport = System::spawn(Teleport::new());
     let mut link: TeleportLink = teleport.link();
     match opts.subcmd {

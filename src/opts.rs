@@ -29,8 +29,8 @@ impl FromStr for LogFormat {
 
 #[derive(Clap)]
 pub struct Opts {
-    #[clap(long)]
-    pub name: Option<String>,
+    #[clap(long, default_value = "teleport")]
+    pub name: String,
     #[clap(subcommand)]
     pub subcmd: SubCommand,
 }
