@@ -63,7 +63,7 @@ pub struct File {
 #[derive(Clap)]
 pub struct Prometheus {
     pub url: String,
-    #[clap(long, default_value = "1_000", about = "interval of updating (ms)")]
+    #[clap(long, default_value = "1000", about = "interval of updating (ms)")]
     pub interval: u64,
 }
 
@@ -72,7 +72,7 @@ pub struct Healthcheck {
     pub url: String,
     #[clap(
         long,
-        default_value = "5_000",
+        default_value = "5000",
         about = "interval of healthchecking (ms)"
     )]
     pub interval: u64,
