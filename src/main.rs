@@ -10,7 +10,10 @@ use anyhow::Error;
 use clap::Clap;
 use meio::prelude::System;
 use opts::{Opts, SubCommand};
+use reqwest::Url;
+use rillrate::rill::prelude::Path;
 use rillrate::RillRate;
+use tokio::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -21,20 +24,37 @@ async fn main() -> Result<(), Error> {
     let mut link: TeleportLink = teleport.link();
     match opts.subcmd {
         SubCommand::Stdin(params) => {
-            link.bind_stdin(params.format.into()).await?;
+            use crate::loggers::{supplier, LogTask};
+            let supplier = supplier::stdin();
+            let task = LogTask::new(supplier, params.format.into());
+            link.attach_task(task).await?;
         }
         SubCommand::File(params) => {
-            link.bind_file(params.path, params.format.into()).await?;
+            use crate::loggers::{supplier, LogTask};
+            let supplier = supplier::file(params.path);
+            let task = LogTask::new(supplier, params.format.into());
+            link.attach_task(task).await?;
         }
         SubCommand::Prometheus(params) => {
-            link.bind_prometheus(&params.url, params.interval).await?;
+            use crate::adapters::prometheus::PrometheusTask;
+            let url = Url::parse(&params.url)?;
+            let interval = Duration::from_millis(params.interval);
+            let task = PrometheusTask::new(url, interval);
+            link.attach_task(task).await?;
         }
         SubCommand::Healthcheck(params) => {
-            link.bind_healthcheck(&params.name, &params.url, params.interval)
-                .await?;
+            use crate::healthcheck::HealthcheckTask;
+            let url = Url::parse(&params.url)?;
+            let interval = Duration::from_millis(params.interval);
+            let path = Path::single(params.name);
+            let task = HealthcheckTask::new(path, url, interval);
+            link.attach_task(task).await?;
         }
         SubCommand::DockerStats(params) => {
-            link.bind_docker_stats(&params.name).await?;
+            use crate::docker_stats::DockerStatsTask;
+            let path = Path::single(params.name);
+            let task = DockerStatsTask::new(path);
+            link.attach_task(task).await?;
         }
     }
     System::wait_or_interrupt(teleport).await?;
